@@ -1,0 +1,235 @@
+import sqlite3
+
+# Connect to database
+conn = sqlite3.connect("students.db")
+cursor = conn.cursor()
+
+# Create table
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS students (
+    sno TEXT PRIMARY KEY,
+    student_name TEXT NOT NULL,
+    father_name TEXT NOT NULL,
+    gender TEXT NOT NULL,
+    pin_no TEXT NOT NULL,
+    address TEXT NOT NULL,
+    grade TEXT NOT NULL
+)
+""")
+
+# Student data
+students = [
+    ("ST001", "Rahul Kumar", "Ramesh Kumar", "Male", "24680-CM-001", "Guntur", "A"),
+    ("ST002", "Priya Sharma", "Suresh Sharma", "Female", "24680-CM-002", "Hyderabad", "A+"),
+    ("ST003", "Arjun Reddy", "Mahesh Reddy", "Male", "24680-CM-003", "Tenali", "B+"),
+    ("ST004", "Sneha Rao", "Krishna Rao", "Female", "24680-CM-004", "Eluru", "A"),
+    ("ST005", "Kiran Kumar", "Prasad Kumar", "Male", "24680-CM-005", "Guntur", "B"),
+    ("ST006", "Anjali Devi", "Ravi Kumar", "Female", "24680-CM-006", "Vijayawada", "A"),
+    ("ST007", "Sai Teja", "Ashok Kumar", "Female", "24680-CM-007", "Vijayanagaram", "A+"),
+    ("ST008", "Lakshmi Priya", "Mohan Rao", "Female", "24680-CM-008", "Machilipatnam", "B+"),
+    ("ST009", "Vamsi Krishna", "Ramesh Rao", "Male", "24680-CM-009", "Guntur", "A"),
+    ("ST010", "Divya Sri", "Satyanarayana", "Female", "24680-CM-010", "Yanam", "A+"),
+    ("ST011", "Naveen Kumar", "Anand Kumar", "Male", "24680-CM-011", "Hyderabad", "B"),
+    ("ST012", "Harika Reddy", "Rajesh Reddy", "Female", "24680-CM-012", "Eluru", "A"),
+    ("ST013", "Rohit Sharma", "Vijay Sharma", "Male", "24680-CM-013", "Tenali", "B+"),
+    ("ST014", "Keerthi Devi", "Suresh Rao", "Female", "24680-CM-014", "Guntur", "A"),
+    ("ST015", "Manish Kumar", "Raju Kumar", "Male", "24680-CM-015", "Vijayawada", "A+"),
+    ("ST016", "Pooja Rani", "Prakash Rao", "Female", "24680-CM-016", "Hyderabad", "B+"),
+    ("ST017", "Sandeep Reddy", "Srinivas Reddy", "Male", "24680-CM-017", "Guntur", "A"),
+    ("ST018", "Swathi Priya", "Kumar Rao", "Female", "24680-CM-018", "Eluru", "A"),
+    ("ST019", "Akash Kumar", "Ramesh Kumar", "Male", "24680-CM-019", "Tenali", "B"),
+    ("ST020", "Bhavya Sri", "Mahesh Rao", "Female", "24680-CM-020", "Vijayawada", "A+"),
+    ("ST021", "Tarun Kumar", "Ravi Kumar", "Male", "24680-CM-021", "Hyderabad", "B+")
+]
+
+# Insert student data
+cursor.executemany("""
+INSERT OR IGNORE INTO students
+(sno, student_name, father_name, gender, pin_no, address, grade)
+VALUES (?, ?, ?, ?, ?, ?, ?)
+""", students)
+
+conn.commit()
+
+
+# -----------------------------
+# FUNCTIONS
+# -----------------------------
+
+def view_students():
+    cursor.execute("SELECT * FROM students")
+    records = cursor.fetchall()
+
+    print("\n" + "=" * 110)
+    print(f"{'S.No':<8}{'Student Name':<20}{'Father Name':<20}"
+          f"{'Gender':<10}{'PIN No':<18}{'Address':<16}{'Grade':<8}")
+    print("=" * 110)
+
+    for student in records:
+        print(f"{student[0]:<8}{student[1]:<20}{student[2]:<20}"
+              f"{student[3]:<10}{student[4]:<18}{student[5]:<16}{student[6]:<8}")
+
+    print("=" * 110)
+
+
+def search_student():
+    sno = input("Enter Student S.No: ")
+
+    cursor.execute("SELECT * FROM students WHERE sno = ?", (sno,))
+    student = cursor.fetchone()
+
+    if student:
+        print("\nStudent Details")
+        print("-" * 40)
+        print("S.No         :", student[0])
+        print("Student Name :", student[1])
+        print("Father Name  :", student[2])
+        print("Gender       :", student[3])
+        print("PIN No       :", student[4])
+        print("Address      :", student[5])
+        print("Grade        :", student[6])
+    else:
+        print("Student not found!")
+
+
+def add_student():
+    print("\nEnter Student Details")
+
+    sno = input("S.No: ")
+    name = input("Student Name: ")
+    father = input("Father Name: ")
+    gender = input("Gender: ")
+    pin = input("PIN No: ")
+    address = input("Address: ")
+    grade = input("Grade: ")
+
+    try:
+        cursor.execute("""
+        INSERT INTO students
+        (sno, student_name, father_name, gender, pin_no, address, grade)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (sno, name, father, gender, pin, address, grade))
+
+        conn.commit()
+        print("Student added successfully!")
+
+    except sqlite3.IntegrityError:
+        print("Error: Student S.No already exists.")
+
+
+def update_student():
+    sno = input("Enter Student S.No to update: ")
+
+    cursor.execute("SELECT * FROM students WHERE sno = ?", (sno,))
+    student = cursor.fetchone()
+
+    if not student:
+        print("Student not found!")
+        return
+
+    print("\nEnter new details")
+
+    name = input("Student Name: ")
+    father = input("Father Name: ")
+    gender = input("Gender: ")
+    pin = input("PIN No: ")
+    address = input("Address: ")
+    grade = input("Grade: ")
+
+    cursor.execute("""
+    UPDATE students
+    SET student_name = ?,
+        father_name = ?,
+        gender = ?,
+        pin_no = ?,
+        address = ?,
+        grade = ?
+    WHERE sno = ?
+    """, (name, father, gender, pin, address, grade, sno))
+
+    conn.commit()
+    print("Student updated successfully!")
+
+
+def delete_student():
+    sno = input("Enter Student S.No to delete: ")
+
+    cursor.execute("SELECT * FROM students WHERE sno = ?", (sno,))
+    student = cursor.fetchone()
+
+    if student:
+        cursor.execute("DELETE FROM students WHERE sno = ?", (sno,))
+        conn.commit()
+        print("Student deleted successfully!")
+    else:
+        print("Student not found!")
+
+
+def search_by_grade():
+    grade = input("Enter grade (A+, A, B+, B): ")
+
+    cursor.execute(
+        "SELECT * FROM students WHERE grade = ?",
+        (grade,)
+    )
+
+    records = cursor.fetchall()
+
+    if records:
+        print("\nStudents with Grade", grade)
+        print("-" * 60)
+
+        for student in records:
+            print(student[0], "-", student[1], "-", student[5], "-", student[6])
+    else:
+        print("No students found with this grade.")
+
+
+# -----------------------------
+# MAIN MENU
+# -----------------------------
+
+while True:
+    print("\n")
+    print("=" * 45)
+    print(" DIPLOMA 3RD YEAR CSE STUDENT DATABASE")
+    print("=" * 45)
+    print("1. View All Students")
+    print("2. Search Student")
+    print("3. Add Student")
+    print("4. Update Student")
+    print("5. Delete Student")
+    print("6. Search Students by Grade")
+    print("7. Exit")
+    print("=" * 45)
+
+    choice = input("Enter your choice: ")
+
+    if choice == "1":
+        view_students()
+
+    elif choice == "2":
+        search_student()
+
+    elif choice == "3":
+        add_student()
+
+    elif choice == "4":
+        update_student()
+
+    elif choice == "5":
+        delete_student()
+
+    elif choice == "6":
+        search_by_grade()
+
+    elif choice == "7":
+        print("Thank you!")
+        break
+
+    else:
+        print("Invalid choice. Please try again.")
+
+
+# Close database
+conn.close()
